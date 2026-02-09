@@ -20,6 +20,8 @@ const HandGestureDetector = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isTimedOut, setTimedout] = useState(false);
   const [gameResult, setGameResult] = useState(null);
+  let cameraRef = useRef(null);
+  const moveSentRef = useRef(false); // Add this flag
 
   useEffect(() => {
     // Listen for game results from server
@@ -59,29 +61,34 @@ const HandGestureDetector = ({
     hands.onResults(onResults);
 
     if (videoRef.current) {
-      const camera = new Camera(videoRef.current, {
+      cameraRef.current = new Camera(videoRef.current, {
         onFrame: async () => {
           await hands.send({ image: videoRef.current });
         },
         width: 640,
         height: 480,
       });
-      camera.start();
+      cameraRef.current.start();
       setIsLoading(false);
 
       setTimeout(() => {
-        camera.stop();
+        if (cameraRef.current) {
+          cameraRef.current.stop();
+        }
         const finalMove = lastGestureRef.current;
 
         console.log("Final Gesture:", lastGestureRef.current);
         setTimedout(true);
-        if (finalMove !== "None" && finalMove !== "Unknown") {
+        
+        // Only send if no move was sent yet
+        if (!moveSentRef.current && finalMove !== "None" && finalMove !== "Unknown") {
           SocketSend({
             type: "move",
             choice: finalMove.toLowerCase(),
           });
+          moveSentRef.current = true;
         }
-      }, 10000);
+      }, 6000);
     }
 
     return () => {
@@ -161,6 +168,15 @@ const HandGestureDetector = ({
       const detectedGesture = detectGesture(results.multiHandLandmarks);
       if (detectedGesture !== "None" && detectedGesture !== "Unknown") {
         lastGestureRef.current = detectedGesture;
+        moveSentRef.current = true; // Mark as sent
+
+        SocketSend({
+          type: "move",
+          choice: detectedGesture.toLowerCase(),
+        });
+        setTimeout(() => {
+          cameraRef.current.stop();
+        }, 1500);
       }
       setGesture(detectedGesture);
       setFinalGesture(lastGestureRef.current);

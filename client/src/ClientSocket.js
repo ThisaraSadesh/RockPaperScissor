@@ -6,7 +6,9 @@ export const initializeSocket = () => {
     return socket;
   }
 
-  socket = new WebSocket("ws://localhost:8000/ws");
+  // Use ws:// for HTTP and continue using it (server doesn't have SSL)
+  const wsUrl = `ws://${window.location.hostname}:8000/ws`;
+  socket = new WebSocket(wsUrl);
 
   socket.onopen = () => {
     console.log("WebSocket connection established");

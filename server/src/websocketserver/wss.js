@@ -115,7 +115,14 @@ const onMessage = (socket, data, roomMap) => {
 };
 
 const decideWinner = (move1, move2) => {
+  if (!move1 && !move2) return "draw";
+  
+  if (!move1) return "player2";
+  
+  if (!move2) return "player1";
+  
   if (move1 === move2) return "draw";
+  
   if (
     (move1 === "rock" && move2 === "scissors") ||
     (move1 === "scissors" && move2 === "paper") ||
@@ -165,10 +172,10 @@ const onStartGame = (room) => {
     }
 
     // Assign random moves if not chosen
-    if (!p1.move)
-      p1.move = ["rock", "paper", "scissors"][Math.floor(Math.random() * 3)];
-    if (!p2.move)
-      p2.move = ["rock", "paper", "scissors"][Math.floor(Math.random() * 3)];
+    // if (!p1.move)
+    //   p1.move = ["rock", "paper", "scissors"][Math.floor(Math.random() * 3)];
+    // if (!p2.move)
+    //   p2.move = ["rock", "paper", "scissors"][Math.floor(Math.random() * 3)];
 
     const winner = decideWinner(p1.move, p2.move);
 
